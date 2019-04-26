@@ -11,7 +11,6 @@ class Composable(object):
     def apply_mapping(self, msg):
         return msg
 
-
 class UnaryMappingComposable(Composable):
     def __init__(self, mapping_func, parent):
         super(UnaryMappingComposable, self).__init__(parent)
@@ -21,8 +20,8 @@ class UnaryMappingComposable(Composable):
         return self.mapping_func(msg)
 
 class MultiMappingComposable(Composable):
-    def __init__(self, joining_func, parent):
-        super(MultiMappingComposable, self).__init__(parent)
+    def __init__(self, joining_func):
+        super(MultiMappingComposable, self).__init__()
         self.joining_func = joining_func
 
     def apply_mapping(self, msg):

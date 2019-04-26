@@ -18,7 +18,7 @@ class PipelineSegment:
                 pipelines.append(other)
         except TypeError:
             pipelines.append(others)
-        return PipelineSegment(DataSourceConjoining(pipelines, buffer_size), MultiMappingComposable(joining_func, self.consumer))
+        return PipelineSegment(DataSourceConjoining(pipelines, buffer_size), MultiMappingComposable(joining_func))
 
     def sink(self, topic, msg_type):
         return Pipeline(self, topic, msg_type)
