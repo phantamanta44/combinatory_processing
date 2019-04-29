@@ -4,5 +4,5 @@ def switch(if_true, if_false):
 def threshold(thresh_value):
     return lambda k: k >= thresh_value
 
-def deadzone(deadzone):
-    return lambda k: k if abs(k) >= deadzone else 0
+def deadzone(thresh_value):
+    return lambda k: k if abs(k) >= thresh_value else 0
