@@ -16,12 +16,19 @@ class RisingEdge:
         self.state = False
 
     def __call__(self, value):
-        if self.state:
-            self.state = value
+        # if self.state:
+        #     self.state = value
+        #     return False
+        # elif value:
+        #     self.state = True
+        #     return True
+        if value:
+            if not self.state:
+                self.state = True
+                return True
             return False
-        elif value:
-            self.state = True
-            return True
+        self.state = False
+        return False
 
 class Integrator:
     def __init__(self, initial_value=0, lower_bound=None, upper_bound=None):

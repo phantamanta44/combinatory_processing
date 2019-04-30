@@ -1,5 +1,5 @@
 import rospy
-from .source import DataSourceTopic, DataSourcePollable
+from .source import DataSourceTopic
 
 
 class Subscription:

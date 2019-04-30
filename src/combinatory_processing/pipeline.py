@@ -1,15 +1,13 @@
 import rospy
-from .composable import *
 from .source import *
 
 
 class PipelineSegment:
-    def __init__(self, source, consumer=Composable()):
+    def __init__(self, source):
         self.source = source
-        self.consumer = consumer
 
     def map(self, mapping_func):
-        return PipelineSegment(self.source, UnaryMappingComposable(mapping_func, self.consumer))
+        return PipelineSegment(DataSourceMapping(self, mapping_func))
 
     def join(self, others, joining_func, buffer_size=4):
         pipelines = [self]
@@ -18,7 +16,7 @@ class PipelineSegment:
                 pipelines.append(other)
         except TypeError:
             pipelines.append(others)
-        return PipelineSegment(DataSourceConjoining(pipelines, buffer_size), MultiMappingComposable(joining_func))
+        return PipelineSegment(DataSourceConjoining(pipelines, joining_func, buffer_size))
 
     def sink(self, topic, msg_type):
         return Pipeline(self, topic, msg_type)
@@ -27,13 +25,11 @@ class PipelineSegment:
 class Pipeline:
     def __init__(self, pipeline, sink_topic, sink_type):
         self.source = pipeline.source
-        self.consumer = pipeline.consumer
         self.dest = rospy.Publisher(sink_topic, sink_type, queue_size=8)
 
     def consume(self, msg):
-        result = self.consumer.process(msg)
-        if result is not None:
-            self.dest.publish(result)
+        if msg is not None:
+            self.dest.publish(msg)
 
 def source_topic(topic, msg_type, buffer_size=4):
     return PipelineSegment(DataSourceTopic(topic, msg_type, buffer_size))

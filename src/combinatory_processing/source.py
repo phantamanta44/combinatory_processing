@@ -11,7 +11,7 @@ class CircularQueue:
         result = self.buffer[self.head_pointer]
         self._advance_head()
         return result
-    
+
     def offer(self, item):
         self.buffer[self.tail_pointer] = item
         if self.tail_pointer == self.end:
@@ -23,7 +23,7 @@ class CircularQueue:
 
     def has_data(self):
         return self.head_pointer != self.tail_pointer
-                    
+
     def _advance_head(self):
         if self.head_pointer == self.end:
             self.head_pointer = 0
@@ -57,14 +57,24 @@ class DataSourcePollable(DataSource):
         return self.poll_func()
 
 
-class DataSourceConjoining(DataSourcePollable):
-    def __init__(self, sources, buffer_size):
-        super(DataSourceConjoining, self).__init__(self.retrieve_data)
-        self.sources = [pipeline.source for pipeline in sources]
-        self.count = len(sources)
-        self.data = [CircularQueue(buffer_size) for pipeline in sources]
+class DataSourceMapping(DataSource):
+    def __init__(self, upstream, mapping_func):
+        self.source = upstream.source
+        self.mapping_func = mapping_func
 
-    def retrieve_data(self):
+    def poll(self):
+        unmapped = self.source.poll()
+        return None if unmapped is None else self.mapping_func(unmapped)
+
+
+class DataSourceConjoining(DataSource):
+    def __init__(self, upstream, joining_func, buffer_size):
+        self.sources = [pipeline.source for pipeline in upstream]
+        self.joining_func = joining_func
+        self.count = len(upstream)
+        self.data = [CircularQueue(buffer_size) for pipeline in upstream]
+
+    def poll(self):
         has_all_data = True
         for i in range(self.count):
             datum = self.sources[i].poll()
@@ -72,4 +82,4 @@ class DataSourceConjoining(DataSourcePollable):
                 self.data[i].offer(datum)
             elif not self.data[i].has_data():
                 has_all_data = False
-        return tuple(queue.query() for queue in self.data) if has_all_data else None
+        return self.joining_func(*tuple(queue.query() for queue in self.data)) if has_all_data else None
