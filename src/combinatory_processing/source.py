@@ -32,12 +32,23 @@ class CircularQueue:
 
 
 class DataSource(object):
-    def poll(self):
+    def __init__(self):
+        self.last_poll_time = -1
+        self.last_data = None
+
+    def pull_data(self, poll_time):
         raise RuntimeError('impossible state!')
+
+    def poll(self, poll_time):
+        if poll_time > self.last_poll_time:
+            self.last_poll_time = poll_time
+            self.last_data = self.pull_data(poll_time)
+        return self.last_data
 
 
 class DataSourceTopic(DataSource):
     def __init__(self, topic_name, msg_type, buffer_size):
+        super(DataSourceTopic, self).__init__()
         self.topic_name = topic_name
         self.msg_type = msg_type
         self.buffer = CircularQueue(buffer_size)
@@ -45,39 +56,42 @@ class DataSourceTopic(DataSource):
     def enqueue(self, msg):
         self.buffer.offer(msg)
 
-    def poll(self):
+    def pull_data(self, poll_time):
         return self.buffer.query()
 
 
 class DataSourcePollable(DataSource):
     def __init__(self, poll_func):
+        super(DataSourcePollable, self).__init__()
         self.poll_func = poll_func
 
-    def poll(self):
+    def pull_data(self, poll_time):
         return self.poll_func()
 
 
 class DataSourceMapping(DataSource):
     def __init__(self, upstream, mapping_func):
+        super(DataSourceMapping, self).__init__()
         self.source = upstream.source
         self.mapping_func = mapping_func
 
-    def poll(self):
-        unmapped = self.source.poll()
+    def pull_data(self, poll_time):
+        unmapped = self.source.poll(poll_time)
         return None if unmapped is None else self.mapping_func(unmapped)
 
 
 class DataSourceConjoining(DataSource):
     def __init__(self, upstream, joining_func, buffer_size):
+        super(DataSourceConjoining, self).__init__()
         self.sources = [pipeline.source for pipeline in upstream]
         self.joining_func = joining_func
         self.count = len(upstream)
         self.data = [CircularQueue(buffer_size) for pipeline in upstream]
 
-    def poll(self):
+    def pull_data(self, poll_time):
         has_all_data = True
         for i in range(self.count):
-            datum = self.sources[i].poll()
+            datum = self.sources[i].poll(poll_time)
             if datum is not None:
                 self.data[i].offer(datum)
             elif not self.data[i].has_data():
