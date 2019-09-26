@@ -20,7 +20,6 @@ def spin(name, pipelines, anon=False, freq=30):
     for pipeline in pipelines:
         for source in pipeline.source_set:
             if isinstance(source, DataSourceTopic) and source not in seen_sources:
-                print(str(type(source)) + ' is a DataSourceTopic: ' + str(isinstance(source, DataSourceTopic)))
                 seen_sources.add(source)
                 if source.topic_name not in subs:
                     sub = Subscription(source.msg_type)
