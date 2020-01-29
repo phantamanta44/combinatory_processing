@@ -82,6 +82,17 @@ class DataSourcePersisting(DataSource):
         return self.cached
 
 
+class DataSourceDefaulting(DataSource):
+    def __init__(self, upstream, default_getter):
+        super(DataSourceDefaulting, self).__init__()
+        self.source = upstream.source
+        self.default_getter = default_getter
+
+    def pull_data(self, poll_time):
+        upstream = self.source.poll(poll_time)
+        return self.default_getter() if upstream is None else upstream
+
+
 class DataSourceMapping(DataSource):
     def __init__(self, upstream, mapping_func):
         super(DataSourceMapping, self).__init__()

@@ -10,6 +10,12 @@ class PipelineSegment:
     def persist(self):
         return PipelineSegment(DataSourcePersisting(self), self.source_hierarchy)
 
+    def default(self, default_getter):
+        return PipelineSegment(DataSourceDefaulting(self, default_getter), self.source_hierarchy)
+
+    def default_const(self, default_value):
+        return self.default(lambda: default_value)
+
     def map(self, mapping_func):
         return PipelineSegment(DataSourceMapping(self, mapping_func), self.source_hierarchy)
 
