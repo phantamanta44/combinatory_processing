@@ -69,6 +69,18 @@ class DataSourcePollable(DataSource):
         return self.poll_func()
 
 
+class DataSourcePersisting(DataSource):
+    def __init__(self, upstream):
+        self.source = upstream.source
+        self.cached = None
+
+    def pull_data(self, poll_time):
+        upstream = self.source.poll(poll_time)
+        if upstream is not None:
+            self.cached = upstream
+        return self.cached
+
+
 class DataSourceMapping(DataSource):
     def __init__(self, upstream, mapping_func):
         super(DataSourceMapping, self).__init__()

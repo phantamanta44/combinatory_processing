@@ -7,6 +7,9 @@ class PipelineSegment:
         self.source = source
         self.source_hierarchy = source_hierarchy + [source]
 
+    def persist(self):
+        return PipelineSegment(DataSourcePersisting(self), self.source_hierarchy)
+
     def map(self, mapping_func):
         return PipelineSegment(DataSourceMapping(self, mapping_func), self.source_hierarchy)
 
