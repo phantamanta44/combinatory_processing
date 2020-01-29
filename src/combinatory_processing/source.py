@@ -71,6 +71,7 @@ class DataSourcePollable(DataSource):
 
 class DataSourcePersisting(DataSource):
     def __init__(self, upstream):
+        super(DataSourcePersisting, self).__init__()
         self.source = upstream.source
         self.cached = None
 
